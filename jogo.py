@@ -3,13 +3,13 @@ clock = pygame.time.Clock()
 from pygame.locals import * 
 pygame.init() 
 
-pygame.display.set_caption('meu joguinho') #o nome da janela
+pygame.display.set_caption('A vingança de Zeca Urubu') #o nome da janela
 
 WINDOW_SIZE = (1000,600) #variavel pra guardar o tamanho da minha janela
 screen = pygame.display.set_mode(WINDOW_SIZE,0,32) #janela
 
-player_image = pygame.image.load('zequinha1d.png') #carrega a imagem do meu personagem
-player_image2 = pygame.image.load('zequinha1e.png')
+player_image = pygame.image.load('Imagens/zequinha1d.png') #carrega a imagem do meu personagem
+player_image2 = pygame.image.load('Imagens/zequinha1e.png')
 
 array_imagem = [1,0]
 
