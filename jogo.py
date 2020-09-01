@@ -17,13 +17,14 @@ bg = pygame.image.load('Imagens/background.png')
 
 last = "right"
 
+pulo = False
 moving_right = False
 moving_left = False
 vertical_momentum = 0
 air_timer = 0
 walkCount = 0
 
-player_location = [10,536]
+player_location = [-3,536]
 player_y_momentum = 1
 
 player_rect = pygame.Rect(player_location[0],player_location[1],player_walkL[0].get_width(),player_walkL[0].get_height())#isso aqui eh pra tratar colisao
@@ -33,6 +34,7 @@ array_rect = [0, 590]
 obstaculo_X=900
 obstaculo_Y=510
 speed=-5
+posbgX = 0
 #rectX = 900
 #rectY = 300
 
@@ -41,7 +43,7 @@ def redrawGameWindow():
 
     if walkCount+1 >= 75:
         walkCount = 0
-
+    
     if (moving_left) and (pulo == False):
         screen.blit(player_walkL[walkCount//5], (player_location[0], player_location[1]))
         walkCount += 1
@@ -58,18 +60,23 @@ def redrawGameWindow():
             screen.blit(player_walkR[0], (player_location[0], player_location[1]))
         if last == "left":
             screen.blit(player_walkL[0], (player_location[0], player_location[1]))
-    
+
     pygame.display.update()
 
 #novo evento pra aumentar a velocidade
 increase_speed = pygame.USEREVENT + 1
 pygame.time.set_timer(increase_speed,1000)
 
-
 while True: # famoso loop infinito
-    clock.tick(60) # fpszada
-    screen.blit(bg, (0,0))
+    clock.tick(60) #fpszada
+    screen.blit(bg, (posbgX,0))
+    screen.blit(bg, (posbgX+1000,0))
     screen.blit(obstaculo_sprite, (obstaculo_X, obstaculo_Y))
+
+    if posbgX > -1000:
+        posbgX -= 1
+    else:
+        posbgX = 0
    
     #printando meu obstaculo
     test_rect2 = pygame.Rect(array_rect[0], array_rect[1], 1000, 10)
@@ -108,7 +115,7 @@ while True: # famoso loop infinito
         if event.type == increase_speed:
             speed -= 1
 
-        if event.type == QUIT: # se a pessoa saiu
+        if event.type == QUIT: #se a pessoa saiu
             pygame.quit() 
             sys.exit()
         
