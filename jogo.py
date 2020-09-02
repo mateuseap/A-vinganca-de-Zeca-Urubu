@@ -14,7 +14,8 @@ player_walkL = [pygame.image.load('Imagens/zequinha1e.png'), pygame.image.load('
 player_jump = [pygame.image.load('Imagens/zequinhajumpd.png'), pygame.image.load('Imagens/zequinhajumpe.png')]
 obstaculo_sprite = pygame.image.load('Imagens/obstaculo.png')
 bg = pygame.image.load('Imagens/background.png')
-
+startScreen = pygame.image.load('Imagens/start.png')
+gameOverScreen = pygame.image.load('Imagens/gameover.png')
 last = "right"
 
 pulo = False
@@ -38,9 +39,31 @@ posbgX = 0
 #rectX = 900
 #rectY = 300
 
+def game_over():
+
+    intro = True
+    global player_location, obstaculo_X, obstaculo_Y
+    
+    while intro:
+        for event in pygame.event.get():
+            #print(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                #tem que resetar todas as variaveis, por enquanto vou resetar so essas 
+                player_location = [0, 536] 
+                obstaculo_X=900
+                obstaculo_Y=510
+                game_loop()
+                
+        screen.blit(gameOverScreen, (0,0))
+        pygame.display.update()
+        clock.tick(15)
+
+
 def redrawGameWindow():
     global walkCount
-
     if walkCount+1 >= 75:
         walkCount = 0
     
@@ -60,89 +83,115 @@ def redrawGameWindow():
             screen.blit(player_walkR[0], (player_location[0], player_location[1]))
         if last == "left":
             screen.blit(player_walkL[0], (player_location[0], player_location[1]))
-
     pygame.display.update()
 
 #novo evento pra aumentar a velocidade
 increase_speed = pygame.USEREVENT + 1
 pygame.time.set_timer(increase_speed,1000)
 
-while True: # famoso loop infinito
-    clock.tick(60) #fpszada
-    screen.blit(bg, (posbgX,0))
-    screen.blit(bg, (posbgX+1000,0))
-    screen.blit(obstaculo_sprite, (obstaculo_X, obstaculo_Y))
+def game_loop(): # famoso loop infinito
 
-    if posbgX > -1000:
-        posbgX -= 1
-    else:
-        posbgX = 0
-   
-    #printando meu obstaculo
-    test_rect2 = pygame.Rect(array_rect[0], array_rect[1], 1000, 10)
-    obstaculo = pygame.Rect(obstaculo_X, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
+    global posbgX, obstaculo_X, obstaculo_Y, moving_right, moving_left, vertical_momentum, speed, array_rect, obstaculo_sprite
+    global player_location, player_rect, pulo, walkCount
 
-    if moving_right == True:
-        player_location[0] += 4
-    if moving_left == True:
-        player_location[0] -= 4
-    player_location[1] += vertical_momentum
-    vertical_momentum += 0.3
-    if vertical_momentum > 5:
-        vertical_momentum = 4
+    while 1:
+        clock.tick(60) #fpszada
+        screen.blit(bg, (posbgX,0))
+        screen.blit(bg, (posbgX+1000,0))
+        screen.blit(obstaculo_sprite, (obstaculo_X, obstaculo_Y))
+
+        if posbgX > -1000:
+            posbgX -= 1
+        else:
+            posbgX = 0
     
-    player_rect.x = player_location[0] # atualizando as "fronteiras" do personagem
-    player_rect.y = player_location[1] # atualizando as "fronteiras" do personagem
-    
-    #atualiza a posição do obstaculo
-    obstaculo.move_ip(speed, 0)
-    obstaculo_X+=speed
-    if (obstaculo_X<-60):
-        obstaculo_X=1060
+        #printando meu obstaculo
+        test_rect2 = pygame.Rect(array_rect[0], array_rect[1], 1000, 10)
+        obstaculo = pygame.Rect(obstaculo_X, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
 
-	#colisão com o chão
-    if player_rect.colliderect(test_rect2):
-        player_location[1] = array_rect[1]-player_walkL[0].get_height()
-        pulo = False
-
-    #colisão com o livro    
-    if player_rect.colliderect(obstaculo):
-        player_location[1] = obstaculo_Y-player_walkL[0].get_height()
-        pulo = False
-
-    for event in pygame.event.get(): #isso aqui fica esperando os eventos
-        #eventozinho pra aumentar a velocidade
-        if event.type == increase_speed:
-            speed -= 1
-
-        if event.type == QUIT: #se a pessoa saiu
-            pygame.quit() 
-            sys.exit()
+        if moving_right == True:
+            player_location[0] += 4
+        if moving_left == True:
+            player_location[0] -= 4
+        player_location[1] += vertical_momentum
+        vertical_momentum += 0.3
+        if vertical_momentum > 5:
+            vertical_momentum = 4
         
-        #qnd clica nas setinhas
-        if event.type == KEYDOWN: 
-            if (event.key == K_RIGHT) or (event.key == K_d):
-                moving_right = True
-                last = "right"
-            elif (event.key == K_LEFT) or (event.key == K_a):
-                moving_left = True
-                last = "left"
-            elif ((event.key == K_UP) or (event.key == K_w)) and (pulo == False):
-                pulo = True
-                if air_timer < 6:
-                    vertical_momentum = -8
-            else:
-                moving_left = False
-                moving_right = False
-                walkCount = 0
-        if event.type == KEYUP:
-            if (event.key == K_RIGHT) or (event.key == K_d):
-                moving_right = False
-            elif (event.key == K_LEFT) or (event.key == K_a):
-                moving_left = False
-            else:
-                moving_left = False
-                moving_right = False
-                walkCount = 0
+        player_rect.x = player_location[0] # atualizando as "fronteiras" do personagem
+        player_rect.y = player_location[1] # atualizando as "fronteiras" do personagem
+        
+        #atualiza a posição do obstaculo
+        obstaculo.move_ip(speed, 0)
+        obstaculo_X+=speed
+        if (obstaculo_X<-60):
+            obstaculo_X=1060
 
-    redrawGameWindow()
+        #colisão com o chão
+        if player_rect.colliderect(test_rect2):
+            player_location[1] = array_rect[1]-player_walkL[0].get_height()
+            pulo = False
+
+        #colisão com o livro    
+        if player_rect.colliderect(obstaculo):
+            player_location[1] = obstaculo_Y-player_walkL[0].get_height()
+            pulo = False
+            game_over()
+
+
+        for event in pygame.event.get(): #isso aqui fica esperando os eventos
+            #eventozinho pra aumentar a velocidade
+            if event.type == increase_speed:
+                speed -= 1
+
+            if event.type == QUIT: #se a pessoa saiu
+                pygame.quit() 
+                sys.exit()
+            
+            #qnd clica nas setinhas
+            if event.type == KEYDOWN: 
+                if (event.key == K_RIGHT) or (event.key == K_d):
+                    moving_right = True
+                    last = "right"
+                elif (event.key == K_LEFT) or (event.key == K_a):
+                    moving_left = True
+                    last = "left"
+                elif ((event.key == K_UP) or (event.key == K_w)) and (pulo == False):
+                    pulo = True
+                    if air_timer < 6:
+                        vertical_momentum = -8
+                else:
+                    moving_left = False
+                    moving_right = False
+                    walkCount = 0
+            if event.type == KEYUP:
+                if (event.key == K_RIGHT) or (event.key == K_d):
+                    moving_right = False
+                elif (event.key == K_LEFT) or (event.key == K_a):
+                    moving_left = False
+                else:
+                    moving_left = False
+                    moving_right = False
+                    walkCount = 0
+
+        redrawGameWindow()
+
+def game_intro():
+
+    intro = True
+
+    while intro:
+        for event in pygame.event.get():
+            #print(event)
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONUP:
+                return 
+                
+        screen.blit(startScreen, (0,0))
+        pygame.display.update()
+        clock.tick(15)
+    
+game_intro()
+game_loop()
