@@ -1,8 +1,11 @@
-import random
-import pygame, sys # lib
+import pygame, sys, random # lib
 clock = pygame.time.Clock() 
 from pygame.locals import * 
+from pygame import mixer
 pygame.init() 
+
+mixer.init()
+mixer.music.load('Audio/kinhodemumbeca.mp3')
 
 pygame.display.set_caption('A vingança de Zeca Urubu') #o nome da janela
 
@@ -13,6 +16,7 @@ player_walkR = [pygame.image.load('Imagens/zequinha1d.png'), pygame.image.load('
 player_walkL = [pygame.image.load('Imagens/zequinha1e.png'), pygame.image.load('Imagens/zequinha2e.png'), pygame.image.load('Imagens/zequinha3e.png'), pygame.image.load('Imagens/zequinha4e.png'), pygame.image.load('Imagens/zequinha5e.png'), pygame.image.load('Imagens/zequinha6e.png'), pygame.image.load('Imagens/zequinha7e.png'), pygame.image.load('Imagens/zequinha8e.png'), pygame.image.load('Imagens/zequinha9e.png'), pygame.image.load('Imagens/zequinha10e.png'), pygame.image.load('Imagens/zequinha11e.png'), pygame.image.load('Imagens/zequinha12e.png'), pygame.image.load('Imagens/zequinha13e.png'), pygame.image.load('Imagens/zequinha14e.png'), pygame.image.load('Imagens/zequinha15e.png')]
 player_jump = [pygame.image.load('Imagens/zequinhajumpd.png'), pygame.image.load('Imagens/zequinhajumpe.png')]
 obstaculo_sprite = pygame.image.load('Imagens/obstaculo.png')
+obstaculo1_sprite = pygame.image.load('Imagens/obstaculo1.jpg')
 bg = pygame.image.load('Imagens/background.png')
 startScreen = pygame.image.load('Imagens/startScreen.png')
 jogar = pygame.image.load('Imagens/jogar.png')
@@ -29,6 +33,7 @@ moving_left = False
 vertical_momentum = 0
 air_timer = 0
 walkCount = 0
+wait = 0
 
 player_location = [-3,536]
 player_y_momentum = 1
@@ -37,17 +42,28 @@ player_rect = pygame.Rect(player_location[0],player_location[1],player_walkL[0].
 
 #variaveis pra meu obstaculo
 array_rect = [0, 590]
-obstaculo_X=900
+minGap=250
+maxGap=950
+obstaculo_X1=900
 obstaculo_Y=510
+obstaculo_X2=random.randint(900+minGap, 900+maxGap)
+obstaculo_X3=random.randint(obstaculo_X2+minGap, obstaculo_X2+maxGap)
+lastObstacle=obstaculo_X3
 speed=-5
 posbgX = 0
 #rectX = 900
 #rectY = 300
 
+def exit():
+    pygame.quit()
+    quit()
+
 def game_over():
 
     intro = True
-    global player_location, obstaculo_X, obstaculo_Y
+    global player_location, obstaculo_X1, obstaculo_Y, obstaculo_X2, obstaculo_X3, lastObstacle, speed, posbgX, array_rect
+    global player_rect, player_y_momentum, walkCount, air_timer, vertical_momentum, moving_left
+    global moving_right, pulo, player_location, minGap, maxGap
     sprites_screen2 = [1, 0, 0]
     while intro:
         pos3 = pygame.mouse.get_pos()[0]
@@ -58,16 +74,33 @@ def game_over():
                 pygame.quit()
                 quit()
             if event.type == pygame.MOUSEBUTTONUP:
-                #tem que resetar todas as variaveis, por enquanto vou resetar so essas 
-                player_location = [0, 536] 
-                obstaculo_X=900
+                player_location = [-3, 536] 
+                obstaculo_X1=900
                 obstaculo_Y=510
-                game_loop()
-            if((pos3 >= 305 and pos3 <= 691) and  (pos4 >= 367 and pos4 <= 440)):
+                obstaculo_X2=random.randint(900+minGap, 900+maxGap)
+                obstaculo_X3=random.randint(obstaculo_X2+minGap, obstaculo_X2+maxGap)
+                lastObstacle=obstaculo_X3
+                pulo = False
+                moving_right = False
+                moving_left = False
+                vertical_momentum = 0
+                air_timer = 0
+                walkCount = 0
+                minGap=250
+                maxGap=950
+
+                player_y_momentum = 1
+
+                player_rect = pygame.Rect(player_location[0],player_location[1],player_walkL[0].get_width(),player_walkL[0].get_height())#isso aqui eh pra tratar colisao
+
+                array_rect = [0, 590]
+                speed=-5
+                posbgX = 0
+            if((pos3 >= 305 and pos3 <= 691) and (pos4 >= 367 and pos4 <= 440)):
                 sprites_screen2[1] = 1
                 sprites_screen2[0] = 0
                 sprites_screen2[2] = 0
-            elif((pos3 >= 305 and pos3 <= 691) and  (pos4 >= 456 and pos4 <= 529)):
+            elif((pos3 >= 305 and pos3 <= 691) and (pos4 >= 456 and pos4 <= 529)):
                 sprites_screen2[1] = 0
                 sprites_screen2[0] = 0
                 sprites_screen2[2] = 1
@@ -75,6 +108,11 @@ def game_over():
                 sprites_screen2[1] = 0
                 sprites_screen2[0] = 1
                 sprites_screen2[2] = 0
+
+            if (event.type == pygame.MOUSEBUTTONUP) and (pos3 >= 305 and pos3 <= 691) and (pos4 >= 367 and pos4 <= 440):
+                game_loop()
+            if (event.type == pygame.MOUSEBUTTONUP) and (pos3 >= 305 and pos3 <= 691) and (pos4 >= 456 and pos4 <= 529):
+                exit()
 
             if sprites_screen2[0]: screen.blit(gameOverScreen, (0,0))
             if sprites_screen2[1]: screen.blit(gameOverPlayAgain, (0,0))
@@ -106,19 +144,23 @@ def redrawGameWindow():
     pygame.display.update()
 
 #novo evento pra aumentar a velocidade
-increase_speed = pygame.USEREVENT + 1
+increase_speed = pygame.USEREVENT+1
 pygame.time.set_timer(increase_speed,1000)
 
 def game_loop(): # famoso loop infinito
 
-    global posbgX, obstaculo_X, obstaculo_Y, moving_right, moving_left, vertical_momentum, speed, array_rect, obstaculo_sprite
-    global player_location, player_rect, pulo, walkCount, last
+    global posbgX, obstaculo_Y, obstaculo_X1, obstaculo_X2,obstaculo_X3, moving_right, moving_left, vertical_momentum, speed, array_rect, obstaculo_sprite, obstaculo1_sprite
+    global player_location, player_rect, pulo, walkCount, last, wait, minGap, maxGap, lastObstacle
+    
+    mixer.music.play()
 
     while 1:
         clock.tick(60) #fpszada
         screen.blit(bg, (posbgX,0))
         screen.blit(bg, (posbgX+1000,0))
-        screen.blit(obstaculo_sprite, (obstaculo_X, obstaculo_Y))
+        screen.blit(obstaculo_sprite, (obstaculo_X1, obstaculo_Y))
+        screen.blit(obstaculo_sprite, (obstaculo_X2, obstaculo_Y))
+        screen.blit(obstaculo_sprite, (obstaculo_X3, obstaculo_Y))
 
         if posbgX > -1000:
             posbgX -= 1
@@ -127,7 +169,9 @@ def game_loop(): # famoso loop infinito
     
         #printando meu obstaculo
         test_rect2 = pygame.Rect(array_rect[0], array_rect[1], 1000, 10)
-        obstaculo = pygame.Rect(obstaculo_X, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
+        obstaculo1= pygame.Rect(obstaculo_X1, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
+        obstaculo2= pygame.Rect(obstaculo_X2, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
+        obstaculo3= pygame.Rect(obstaculo_X3, obstaculo_Y, obstaculo_sprite.get_width(), obstaculo_sprite.get_height())
 
         if moving_right == True:
             player_location[0] += 4
@@ -142,10 +186,23 @@ def game_loop(): # famoso loop infinito
         player_rect.y = player_location[1] # atualizando as "fronteiras" do personagem
         
         #atualiza a posição do obstaculo
-        obstaculo.move_ip(speed, 0)
-        obstaculo_X+=speed
-        if (obstaculo_X<-60):
-            obstaculo_X=1060
+        obstaculo1
+        obstaculo_X1+=speed
+        obstaculo_X2+=speed
+        obstaculo_X3+=speed
+        lastObstacle+=speed
+
+        if (obstaculo_X1<-60):
+            obstaculo_X1=random.uniform(lastObstacle+minGap, lastObstacle+maxGap)
+            lastObstacle=obstaculo_X1
+
+        if (obstaculo_X2<-60):
+            obstaculo_X2=random.uniform(lastObstacle+minGap, lastObstacle+maxGap)
+            lastObstacle=obstaculo_X2
+
+        if (obstaculo_X3<-60):
+            obstaculo_X3=random.uniform(lastObstacle+minGap, lastObstacle+maxGap)
+            lastObstacle=obstaculo_X3
 
         #colisão com o chão
         if player_rect.colliderect(test_rect2):
@@ -153,16 +210,29 @@ def game_loop(): # famoso loop infinito
             pulo = False
 
         #colisão com o livro    
-        if player_rect.colliderect(obstaculo):
-            player_location[1] = obstaculo_Y-player_walkL[0].get_height()
+        if player_rect.colliderect(obstaculo1):
+            #player_location[1] = obstaculo_Y-player_walkL[0].get_height()
             pulo = False
             game_over()
-
+        
+        if player_rect.colliderect(obstaculo2):
+            #player_location[1] = obstaculo_Y-player_walkL[0].get_height()
+            pulo = False
+            game_over()
+        
+        if player_rect.colliderect(obstaculo3):
+            #player_location[1] = obstaculo_Y-player_walkL[0].get_height()
+            pulo = False
+            game_over()
 
         for event in pygame.event.get(): #isso aqui fica esperando os eventos
             #eventozinho pra aumentar a velocidade
             if event.type == increase_speed:
-                speed -= 1
+                if event.type == increase_speed:
+                    speed -= 0.1
+                    minGap += 6
+                    maxGap += 6
+                    
 
             if event.type == QUIT: #se a pessoa saiu
                 pygame.quit() 
@@ -209,17 +279,17 @@ def game_intro():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if((pos1 >= 358 and pos1 <= 605) and  (pos2 >= 312 and pos2 <= 366)):
+            if((pos1 >= 358 and pos1 <= 605) and (pos2 >= 312 and pos2 <= 366)):
                 sprites_screen[1] = 1
                 sprites_screen[0] = 0
                 sprites_screen[2] = 0
                 sprites_screen[3] = 0
-            elif((pos1 >= 358 and pos1 <= 605) and  (pos2 >= 393 and pos2 <= 443)):
+            elif((pos1 >= 358 and pos1 <= 605) and (pos2 >= 393 and pos2 <= 443)):
                 sprites_screen[1] = 0
                 sprites_screen[0] = 0
                 sprites_screen[2] = 1
                 sprites_screen[3] = 0
-            elif((pos1 >= 358 and pos1 <= 605) and  (pos2 >= 473 and pos2 <= 527)):
+            elif((pos1 >= 358 and pos1 <= 605) and (pos2 >= 473 and pos2 <= 527)):
                 sprites_screen[1] = 0
                 sprites_screen[0] = 0
                 sprites_screen[2] = 0
@@ -230,10 +300,12 @@ def game_intro():
                 sprites_screen[2] = 0
                 sprites_screen[3] = 0
 
-            if (event.type == pygame.MOUSEBUTTONUP) and (pos1 >= 358 and pos1 <= 605) and  (pos2 >= 312 and pos2 <= 366):
-                return
-            if (event.type == pygame.MOUSEBUTTONUP) and (pos1 >= 358 and pos1 <= 605) and  (pos2 >= 393 and pos2 <= 443):
-                return
+            if (event.type == pygame.MOUSEBUTTONUP) and (pos1 >= 358 and pos1 <= 605) and (pos2 >= 312 and pos2 <= 366):
+                game_loop()
+            if (event.type == pygame.MOUSEBUTTONUP) and (pos1 >= 358 and pos1 <= 605) and (pos2 >= 393 and pos2 <= 443):
+                print('JongaDeus\n')
+            if (event.type == pygame.MOUSEBUTTONUP) and (pos1 >= 358 and pos1 <= 605) and (pos2 >= 473 and pos2 <= 527):
+                exit()
 
         if sprites_screen[0] : screen.blit(startScreen, (0,0))
         if sprites_screen[1] : screen.blit(jogar, (0,0))
@@ -242,4 +314,4 @@ def game_intro():
         pygame.display.update()
         clock.tick(15)
 game_intro()
-game_loop()
+#game_loop()
