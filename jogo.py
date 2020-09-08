@@ -5,8 +5,7 @@ from pygame import mixer
 pygame.init() 
 
 mixer.init()
-mixer.music.load('Audio/kinhodemumbeca.mp3')
-
+mixer.music.load('Audio/getitem.ogg')
 pygame.display.set_caption('A vingança de Zeca Urubu') #o nome da janela
 
 WINDOW_SIZE = (1000,600) #variavel pra guardar o tamanho da minha janela
@@ -59,7 +58,8 @@ def exit():
     quit()
 
 def game_over():
-
+    mixer.music.stop()
+    mixer.music.load('Audio/getitem.ogg')
     intro = True
     global player_location, obstaculo_X1, obstaculo_Y, obstaculo_X2, obstaculo_X3, lastObstacle, speed, posbgX, array_rect
     global player_rect, player_y_momentum, walkCount, air_timer, vertical_momentum, moving_left
@@ -97,10 +97,12 @@ def game_over():
                 speed=-5
                 posbgX = 0
             if((pos3 >= 305 and pos3 <= 691) and (pos4 >= 367 and pos4 <= 440)):
+                if sprites_screen2[1]==0: mixer.music.play()
                 sprites_screen2[1] = 1
                 sprites_screen2[0] = 0
                 sprites_screen2[2] = 0
             elif((pos3 >= 305 and pos3 <= 691) and (pos4 >= 456 and pos4 <= 529)):
+                if sprites_screen2[2]==0: mixer.music.play()
                 sprites_screen2[1] = 0
                 sprites_screen2[0] = 0
                 sprites_screen2[2] = 1
@@ -151,7 +153,7 @@ def game_loop(): # famoso loop infinito
 
     global posbgX, obstaculo_Y, obstaculo_X1, obstaculo_X2,obstaculo_X3, moving_right, moving_left, vertical_momentum, speed, array_rect, obstaculo_sprite, obstaculo1_sprite
     global player_location, player_rect, pulo, walkCount, last, wait, minGap, maxGap, lastObstacle
-    
+    mixer.music.load('Audio/kinhodemumbeca.mp3')
     mixer.music.play()
 
     while 1:
@@ -280,16 +282,19 @@ def game_intro():
                 pygame.quit()
                 quit()
             if((pos1 >= 358 and pos1 <= 605) and (pos2 >= 312 and pos2 <= 366)):
+                if (sprites_screen[1]==0): mixer.music.play()
                 sprites_screen[1] = 1
                 sprites_screen[0] = 0
                 sprites_screen[2] = 0
                 sprites_screen[3] = 0
             elif((pos1 >= 358 and pos1 <= 605) and (pos2 >= 393 and pos2 <= 443)):
+                if (sprites_screen[2]==0): mixer.music.play()
                 sprites_screen[1] = 0
                 sprites_screen[0] = 0
                 sprites_screen[2] = 1
                 sprites_screen[3] = 0
             elif((pos1 >= 358 and pos1 <= 605) and (pos2 >= 473 and pos2 <= 527)):
+                if (sprites_screen[3]==0): mixer.music.play()
                 sprites_screen[1] = 0
                 sprites_screen[0] = 0
                 sprites_screen[2] = 0
